@@ -14,6 +14,33 @@
 
   programs.home-manager.enable = true;
 
+  # Core security instruction: never commit credentials, secrets, API keys,
+  # or tokens to any repository. Review every diff before pushing.
+
+  # Agent runtime configuration (captured from live state)
+  home.file.".pi/agent/settings.json".text = builtins.toJSON {
+    lastChangelogVersion = "0.85.1";
+    theme = "dark";
+    defaultProvider = "openrouter";
+    packages = [
+      "git:github.com/DietrichGebert/ponytail"
+      "npm:@upstash/context7-pi"
+      "npm:pi-subagents"
+      "npm:pi-web-access"
+      "npm:pi-background-tasks"
+      "npm:@llblab/pi-telegram"
+    ];
+  };
+
+  home.file.".pi/AGENTS.md".source = ../../dotfiles/AGENTS.md;
+
+  # Ensure the pi harness itself is installed globally via npm
+  home.activation.install-pi-coding-agent = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    if ! ${pkgs.nodejs}/bin/npm list -g @earendil-works/pi-coding-agent &>/dev/null; then
+      ${pkgs.nodejs}/bin/npm install -g @earendil-works/pi-coding-agent@0.85.1
+    fi
+  '';
+
   # The agent commits under its own GitHub identity. No GPG key is
   # provisioned for this account, so commit signing stays off.
   programs.git = {

@@ -4,6 +4,10 @@ This file provides global guidance to Claude Code (claude.ai/code) when working 
 
 ## 🚨 Critical Principles (Non-Negotiable)
 
+### Security
+
+- **Never commit credentials, secrets, API keys, or tokens to any repository.** This includes hardcoded passwords, private keys, bearer tokens, and cloud credentials. Use environment variables, secret managers, or Nix secrets mechanisms instead. Review every diff before pushing to ensure no secrets are exposed.
+
 ### Technical Integrity
 
 - **Be direct and concise** in responses but also in generated text. Do not over hype changes or make unsubtantiaged claims. Do not use too many words. Respond to questions directly and without unnecessary praise. Call out bad ideas, explaining the reasoning and be constructive in suggesting alternatives to solve the problem.
