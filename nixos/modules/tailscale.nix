@@ -1,8 +1,14 @@
 { ... }: {
-  services.tailscale.enable = true;
+  services.tailscale = {
+    enable = true;
+    useRoutingFeatures = "client";
+  };
 
-  networking.nameservers = [ "100.100.100.100" "8.8.8.8" "1.1.1.1" ];
-  networking.search = [ "giraffe-duck.ts.net" ];
+  # DNS is left to tailscaled, which registers a split-DNS resolvconf record
+  # for the tailnet and leaves DHCP-provided resolvers in place. Setting
+  # networking.nameservers here would pin a static resolvconf record at
+  # metric 1 and, since glibc reads at most MAXNS (3) nameservers, silently
+  # drop every LAN resolver.
 
   networking.nftables.enable = true;
   networking.firewall = {
@@ -13,14 +19,9 @@
     allowedUDPPorts = [ 41641 ];
   };
 
-  # 2. Force tailscaled to use nftables (Critical for clean nftables-only systems)
+  # Force tailscaled to use nftables (Critical for clean nftables-only systems)
   # This avoids the "iptables-compat" translation layer issues.
-  systemd.services.tailscaled.serviceConfig.Environment = [ 
-    "TS_DEBUG_FIREWALL_MODE=nftables" 
+  systemd.services.tailscaled.serviceConfig.Environment = [
+    "TS_DEBUG_FIREWALL_MODE=nftables"
   ];
-
-  # 3. Optimization: Prevent systemd from waiting for network online 
-  # (Optional but recommended for faster boot with VPNs)
-  systemd.network.wait-online.enable = false; 
-  boot.initrd.systemd.network.wait-online.enable = false;
 }
