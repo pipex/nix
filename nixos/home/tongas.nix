@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+{ pkgs, lib, ... }: {
   imports = [
     ../../home/common/core.nix
     ../../home/common/shell.nix
@@ -40,6 +40,31 @@
   };
 
   home.packages = with pkgs; [
+    # c/c++ toolchain
+    #
+    # gcc owns the generic `cc`/`c++`/`cpp` names; clang and binutils are
+    # lowPrio so their overlapping wrappers (`cc`, `ld`, `as`, ...) lose the
+    # collision instead of breaking the profile build. `clang`/`clang++` and
+    # the binutils tools (`ar`, `nm`, `objdump`, `strip`) stay on PATH.
+    gcc
+    (lib.lowPrio clang)
+    (lib.lowPrio binutils)
+    clang-tools # clangd, clang-format, clang-tidy
+    gnumake
+    cmake
+    ninja
+    meson
+    pkg-config
+    autoconf
+    automake
+    libtool
+    m4
+    gettext # autopoint, for autoreconf on i18n projects
+    bison
+    flex
+    patch
+    gdb
+
     # typescript
     nodejs
     pnpm
