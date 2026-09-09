@@ -69,7 +69,7 @@
     picocom
 
     # Docker VM and CLI
-    docker
+    docker_29
     kubectl
     k9s
     podman-compose
