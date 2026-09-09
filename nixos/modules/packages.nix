@@ -35,6 +35,11 @@
     nodejs
     go
 
+    # python
+    python3
+    python3Packages.pip # per-user installs: pip install --user
+    uv
+
     # shell tools
     shellcheck
     shfmt
