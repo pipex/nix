@@ -42,13 +42,13 @@
   home.packages = with pkgs; [
     # c/c++ toolchain
     #
-    # gcc owns the generic `cc`/`c++`/`cpp` names; clang and binutils are
-    # lowPrio so their overlapping wrappers (`cc`, `ld`, `as`, ...) lose the
-    # collision instead of breaking the profile build. `clang`/`clang++` and
-    # the binutils tools (`ar`, `nm`, `objdump`, `strip`) stay on PATH.
-    gcc
-    (lib.lowPrio clang)
-    (lib.lowPrio binutils)
+    # Both cc wrappers hardcode `meta.priority = 10`, so gcc and clang tie on
+    # the names they share (`cc`, `c++`, `cpp`, plus the bintools symlinks each
+    # wrapper copies into its own bin) and buildEnv refuses to pick a winner.
+    # hiPrio makes gcc the generic `cc`; clang keeps `clang`/`clang++`.
+    # No separate binutils: the cc wrapper already exposes ld/ar/nm/objdump/strip.
+    (lib.hiPrio gcc)
+    clang
     clang-tools # clangd, clang-format, clang-tidy
     gnumake
     cmake
