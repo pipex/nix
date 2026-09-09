@@ -75,7 +75,7 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIESnsaukXTbFf2xLENvpTFwS/zSk8jNMshUYW+pWz1BQ felipe@balena.io"
     ];
 
-    mkNixosConfig = { hostname, system }: let
+    mkNixosConfig = { hostname, system, extraModules ? [ ] }: let
       specialArgs = inputs // { inherit fullname username useremail hostname sshKeys; };
     in nixpkgs.lib.nixosSystem {
       inherit system specialArgs;
@@ -94,7 +94,7 @@
           home-manager.extraSpecialArgs = specialArgs;
           home-manager.users.${username} = import ./nixos/home;
         }
-      ];
+      ] ++ extraModules;
     };
   in {
     darwinConfigurations."${hostname}" = darwin.lib.darwinSystem {
@@ -128,7 +128,14 @@
     };
 
     nixosConfigurations = {
-      phobos = mkNixosConfig { hostname = "phobos"; system = "x86_64-linux"; };
+      phobos = mkNixosConfig {
+        hostname = "phobos";
+        system = "x86_64-linux";
+        extraModules = [
+          # Sandbox account for an AI agent running the pi harness
+          ./nixos/hosts/phobos/tongas.nix
+        ];
+      };
       deimos = mkNixosConfig { hostname = "deimos"; system = "aarch64-linux"; };
     };
 

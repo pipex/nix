@@ -66,11 +66,13 @@
     luarocks
     nixd
     protobuf
+    picocom
 
     # Docker VM and CLI
     docker
     kubectl
     k9s
+    podman-compose
 
     unstable.qemu
   ];
