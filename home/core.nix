@@ -86,7 +86,7 @@
   # Prettier
   home.file.".prettierrc.json".source = ../dotfiles/prettierrc.json;
 
-  # Global CLAUDE.md and settings
+  # Global CLAUDE.md
   home.file.".claude/CLAUDE.md".source = ../dotfiles/CLAUDE.md;
 
   # Safe-chain config
