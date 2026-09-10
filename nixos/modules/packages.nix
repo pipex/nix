@@ -55,6 +55,13 @@
   # Register zsh as a valid login shell (home-manager configures the rest)
   programs.zsh.enable = true;
 
+  # allow dynamic libraries
+  programs.nix-ld.enable = true;
+  programs.nix-ld.libraries = with pkgs; [
+    # add missing dynamic libraries here
+  ];
+
+
   # podman
   virtualisation.podman = {
     enable = true;
