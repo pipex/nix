@@ -10,6 +10,15 @@
 
   xdg.configFile."oh-my-zsh".source = ../../dotfiles/oh-my-zsh;
 
+  # Clipboard bridge. The same script tmux uses as its copy-command, also exposed
+  # as `clip` on PATH so that copying works outside tmux. Falls back to an OSC 52
+  # escape sequence when no clipboard tool is reachable, which is what makes
+  # copying work over ssh with no X11 forwarding.
+  home.file.".local/bin/clip" = {
+    source = ../../dotfiles/bin/clip;
+    executable = true;
+  };
+
   home.file.".tmux.conf".source = ../../dotfiles/tmux/tmux.conf;
   home.file.".tmux".recursive = true;
   home.file.".tmux".source = ../../dotfiles/tmux;

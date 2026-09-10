@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+#
+# Copy stdin (or the named files) to the clipboard of the machine in front of
+# the user. Used as tmux's copy-command and as `clip` on PATH.
+#
+# Prefers a real clipboard tool. Otherwise falls back to an OSC 52 escape
+# sequence, which rides the terminal connection itself and so needs neither X11
+# forwarding nor a clipboard daemon on this host.
+
+set -uo pipefail
+
+readonly progname="${0##*/}"
+
+is_app_installed() {
+	type "$1" &>/dev/null
+}
+
+# Tolerate the absence of a tmux server: this also runs as a plain CLI.
+tmux_option() {
+	is_app_installed tmux || return 0
+	tmux show-option -gvq "$1" 2>/dev/null || true
+}
+
+buf=$(cat "$@")
+[ -n "$buf" ] || exit 0
+
+copy_backend_remote_tunnel_port=$(tmux_option "@copy_backend_remote_tunnel_port")
+copy_use_osc52_fallback=$(tmux_option "@copy_use_osc52_fallback")
+
+copy_backend=""
+if is_app_installed pbcopy; then
+	copy_backend="pbcopy"
+elif [ -n "${DISPLAY-}" ] && is_app_installed xsel; then
+	copy_backend="xsel -i --clipboard"
+elif [ -n "${DISPLAY-}" ] && is_app_installed xclip; then
+	copy_backend="xclip -i -f -selection primary | xclip -i -selection clipboard"
+elif [ -n "${copy_backend_remote_tunnel_port-}" ] &&
+	(ss -4 -tnl 2>/dev/null || netstat -f inet -nl 2>/dev/null || netstat -4 -nl 2>/dev/null) |
+	grep -q "[.:]$copy_backend_remote_tunnel_port"; then
+	copy_backend="nc localhost $copy_backend_remote_tunnel_port"
+fi
+
+if [ -n "$copy_backend" ]; then
+	printf "%s" "$buf" | eval "$copy_backend"
+	exit
+fi
+
+if [ "$copy_use_osc52_fallback" == "off" ]; then
+	exit
+fi
+
+# OSC 52 caps a sequence at 100_000 bytes; the header and terminator leave
+# 99_992 bytes of base64, i.e. 74_994 bytes of input.
+# https://sunaku.github.io/tmux-yank-osc52.html
+readonly maxlen=74994
+buflen=$(printf %s "$buf" | wc -c)
+if [ "$buflen" -gt "$maxlen" ]; then
+	printf '%s: input truncated, %d bytes over the OSC 52 limit\n' \
+		"$progname" "$((buflen - maxlen))" >&2
+fi
+b64=$(printf %s "$buf" | head -c "$maxlen" | base64 | tr -d '\r\n')
+
+# Target the client attached *now*; $SSH_TTY is inherited from the ssh session
+# that created the tmux session and goes stale on reattach. The client tty also
+# sits outside tmux, unlike #{pane_tty}, which leads back into it.
+tmux_client_tty=""
+if is_app_installed tmux; then
+	tmux_client_tty=$(tmux display-message -p '#{client_tty}' 2>/dev/null) || tmux_client_tty=""
+fi
+
+# Probe openability rather than permission bits: /dev/tty is world-writable but
+# fails to open without a controlling terminal. Append mode so that a candidate
+# which turns out to be a regular file is not truncated.
+target_tty=""
+for candidate in "$tmux_client_tty" "${SSH_TTY-}" /dev/tty; do
+	[ -n "$candidate" ] || continue
+	if { exec 3>>"$candidate"; } 2>/dev/null; then
+		target_tty="$candidate"
+		break
+	fi
+done
+
+if [ -z "$target_tty" ]; then
+	printf '%s: found no writable terminal to send the clipboard sequence to\n' \
+		"$progname" >&2
+	exit 1
+fi
+
+# Bare form for a terminal we can reach directly; DCS-wrapped form to survive a
+# tmux on the *local* machine, which otherwise swallows the bare sequence into
+# its own buffer. Which case applies is not detectable from here, so send both:
+# same payload, so the result is identical either way.
+{
+	printf '\033]52;c;%s\a' "$b64"
+	# shellcheck disable=SC1003 # \\ is printf's escape for the ST terminator, not a quote
+	printf '\033Ptmux;\033\033]52;c;%s\a\033\\' "$b64"
+} >&3
+exec 3>&-
