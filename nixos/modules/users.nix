@@ -17,7 +17,6 @@
     openssh.authorizedKeys.keys = sshKeys;
   };
 
-  nix.settings.trusted-users = [username];
-
-  security.sudo.wheelNeedsPassword = false;
+  # Members of `wheel` must authenticate to use sudo
+  security.sudo.wheelNeedsPassword = true;
 }
