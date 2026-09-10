@@ -1,4 +1,4 @@
-{ config, pkgs, ... }: {
+{ pkgs, ... }: {
   programs.zsh = {
     enable = true;
     enableCompletion = true;
@@ -10,7 +10,6 @@
 
     oh-my-zsh = {
       enable = true;
-      custom = "${config.xdg.configHome}/oh-my-zsh";
       extraConfig = ''
         DISABLE_MAGIC_FUNCTIONS="true";
       '';
