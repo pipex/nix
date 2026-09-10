@@ -71,7 +71,7 @@
     casks = [
       "balenaetcher"
       "cloudflare-warp"
-      # "docker-desktop"
+      "docker-desktop"
       "ungoogled-chromium"
       "raycast"
       "tailscale-app"
