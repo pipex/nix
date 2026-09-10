@@ -4,8 +4,8 @@
   xdg.configFile."nvim".source = pkgs.fetchFromGitHub {
     owner = "pipex";
     repo = "astrovim";
-    rev = "9f820a5";
-    sha256 = "1a2ndrn4xy0xghd9w6y14z68323l883vbbi6738r1r644x32wb8k";
+    rev = "546b724";
+    sha256 = "1aw9rmshjc2jd4wdziy19fr4bm6amk2syzcan2099pcs7nrmqmip";
   };
 
   xdg.configFile."oh-my-zsh".source = ../../dotfiles/oh-my-zsh;
