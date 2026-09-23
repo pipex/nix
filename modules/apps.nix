@@ -34,8 +34,12 @@
     onActivation = {
       autoUpdate = true; # Fetch the newest stable branch of Homebrew's git repo
       upgrade = true; # Upgrade outdated casks, formulae, and App Store apps
-      # 'zap': uninstalls all formulae(and related files) not listed in the generated Brewfile
-      cleanup = "zap";
+      # Homebrew 7 disabled the `brew bundle install --cleanup` switch, but
+      # nix-darwin 25.11 still emits `--cleanup --zap` for cleanup = "zap".
+      # Pass Homebrew 7's spelling directly, which is what nix-darwin master
+      # generates. See https://github.com/nix-darwin/nix-darwin/issues/1787
+      cleanup = "none";
+      extraFlags = ["--zap" "--force-cleanup"];
     };
 
     # Applications to install from Mac App Store using mas.
