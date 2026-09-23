@@ -39,6 +39,7 @@
       init.defaultBranch = "main";
       trim.bases = "develop,master,main"; # for git-trim
       push.autoSetupRemote = true;
+      worktree.guessRemote = true; # `git worktree add ../foo` tracks origin/foo if it exists
       pull.rebase = true;
       log.date = "iso"; # use iso format for date
 
